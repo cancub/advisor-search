@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class GameController : MonoBehaviour {
-	public GameObject obstacles; 
-	public GameObject playingField;
-	public GameObject borders;
-	public GameObject characterPrefab;
-	public GameObject characters;
-	private Vector2 bottomLeft;
-	private Vector2 size;
+	// class to control the functionality of the game
 
+	public GameObject obstacles; 		// parent object of all the obstactles in the game
+	public GameObject playingField;		// board on which the game will be played
+	public GameObject borders;			// boundary objects which define the field
+	public GameObject characterPrefab;	// the circle prefab that is used to show the agents
+	public GameObject characters;		// the parent object that contains all the characters
+	public int numCharacters;			// the number of characters in the game
+	public GameObject marker;			// the X destination point for now
+	private Vector2 bottomLeft;			// the bottom left of the playing field
+	private Vector2 size;				// the height and width of the playing field
 
 	// Use this for initialization
 	void Start () {
@@ -20,15 +23,23 @@ public class GameController : MonoBehaviour {
 			playingField.GetComponent<MeshFilter> ().mesh.bounds.size.z / 2f);
 		size = -2 * bottomLeft;
 
-//		print (bottomLeft);
-		// create a character 
-		Instantiate(characterPrefab,characters.transform);
+		// place the marker somewhere random that works
+		marker.transform.position = emptyPointInGame ();
+
+		// create the characters
+		for (int i = 0; i < numCharacters; i++) {
+			Instantiate (characterPrefab, characters.transform);
+		}
 
 	}
 	
 	// Update is called once per frame
-	void Update () {
-		
+	void Update() {
+
+		// move the marker if the user has clicked somewhere that makes sense
+		if (Input.GetMouseButtonDown(0)) {
+			MoveTarget(Camera.main.ScreenPointToRay(Input.mousePosition));
+		}
 	}
 
 	public bool inObstacle(float x, float y) {
@@ -37,25 +48,50 @@ public class GameController : MonoBehaviour {
 			Vector2 pos = new Vector2 (child.position.x - child.localScale.x / 2f, 
 				child.position.y - child.localScale.y / 2f) - bottomLeft;
 			Vector2 size = new Vector2 (child.localScale.x, child.localScale.y);
+
+			// this rectangle contains the obstacle from a 2D standpoint
 			Rect rect = new Rect(pos,size);
-			// this child rectangle contains the object
-			print(rect);
+
+			// is the point under investigation within the object
+			if (rect.Contains (new Vector2 (x, y) - bottomLeft)) {
+				return true;
+			}
+		}
+
+		// repeat with borders
+		foreach (Transform child in borders.transform) {
+			
+			Vector2 pos = new Vector2 (child.position.x - child.localScale.x / 2f, 
+				child.position.y - child.localScale.y / 2f) - bottomLeft;
+			Vector2 size = new Vector2 (child.localScale.x, child.localScale.y);
+			Rect rect = new Rect(pos,size);
 
 			if (rect.Contains (new Vector2 (x, y) - bottomLeft)) {
 				return true;
 			}
 		}
 
-		foreach (Transform child in borders.transform) {
-			// get the rectangle that describes the top surface of the object
+		return false;
+	}
+
+	public bool inObstacle(Vector2 click) {
+		// the other version of the above, given a "click" or the Vector2 representation of a point
+		foreach (Transform child in obstacles.transform) {
 			Vector2 pos = new Vector2 (child.position.x - child.localScale.x / 2f, 
 				child.position.y - child.localScale.y / 2f) - bottomLeft;
 			Vector2 size = new Vector2 (child.localScale.x, child.localScale.y);
 			Rect rect = new Rect(pos,size);
-			// this child rectangle contains the object
-			print(rect);
+			if (rect.Contains (new Vector2 (click.x, click.y) - bottomLeft)) {
+				return true;
+			}
+		}
 
-			if (rect.Contains (new Vector2 (x, y) - bottomLeft)) {
+		foreach (Transform child in borders.transform) {
+			Vector2 pos = new Vector2 (child.position.x - child.localScale.x / 2f, 
+				child.position.y - child.localScale.y / 2f) - bottomLeft;
+			Vector2 size = new Vector2 (child.localScale.x, child.localScale.y);
+			Rect rect = new Rect(pos,size);
+			if (rect.Contains (new Vector2 (click.x, click.y) - bottomLeft)) {
 				return true;
 			}
 		}
@@ -78,5 +114,24 @@ public class GameController : MonoBehaviour {
 		} while (inObstacle (x, y));
 
 		return new Vector2 (x, y);
+	}
+
+	public Vector2 getDestination() {
+		// gameobjects in the game will want to know where they should be moving
+		return marker.transform.position;
+	}
+
+	private void MoveTarget(Ray ray) {
+		RaycastHit hit;
+		if (Physics.Raycast (ray, out hit)) {
+			// get the x and y positions of the click, but center in the corresponding tile
+			float x = Mathf.Floor(hit.point.x) + 0.5f;
+			float y = Mathf.Floor(hit.point.y) + 0.5f;
+
+			// move the marker if the click occured in a position that is free from objects
+			if (!inObstacle(x,y)){
+				marker.transform.position = new Vector3 (x, y, 0);
+			}
+		}
 	}
 }

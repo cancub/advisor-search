@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour {
 	private GameController gc;
+	private Vector2 dest;
 
 	// Use this for initialization
 	void Start () {
@@ -13,6 +14,9 @@ public class Character : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		// check if x has moved
+		// if so, update destination position
+		// restart algorithm
 		
 	}
 }
