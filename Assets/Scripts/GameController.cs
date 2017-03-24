@@ -25,6 +25,7 @@ public class GameController : MonoBehaviour {
 
 		// place the marker somewhere random that works
 		marker.transform.position = emptyPointInGame ();
+//		marker.transform.position = new Vector3(2.5f,-2.5f,0);
 
 		// create the characters
 		for (int i = 0; i < numCharacters; i++) {

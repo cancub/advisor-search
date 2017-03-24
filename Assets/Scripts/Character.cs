@@ -9,7 +9,6 @@ public class Character : MonoBehaviour {
 	private Vector2 dest;			// the current destination of this character
 	private List<Vector2> path;		// the remaining steps in the path to reach the destination
 	private bool moving;			// check for whether the character is in motion or not
-	private AStar pathfinder;		// the controller for the A* pathfinding algorithm
 	private Vector2 nextTile;
 
 
@@ -18,8 +17,7 @@ public class Character : MonoBehaviour {
 	void Start () {
 		gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
 		transform.position = gc.emptyPointInGame ();
-		dest = gc.getDestination ();
-		pathfinder = new AStar ();
+//		transform.position = new Vector3(-2.5f,-1.5f,0);
 		moving = false;
 	}
 	
@@ -46,7 +44,7 @@ public class Character : MonoBehaviour {
 			// A) haven't started along a path or have reached the destination
 			// B) we have just made it to the next tile
 			// only move in B
-			if (path.Count > 0) {
+ 			if (path.Count > 0) {
 				// we are stationary and there are more movements to make
 				nextTile = path[0];
 				updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
@@ -62,7 +60,7 @@ public class Character : MonoBehaviour {
 		// figure out where we need to go
 		dest = gc.getDestination();
 		// build the path from the current position to there
-		path = pathfinder.navigate (transform.position, dest);
+		path = AStar.navigate (transform.position, dest);
 	}
 
 

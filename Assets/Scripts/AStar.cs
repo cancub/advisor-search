@@ -9,21 +9,17 @@ public struct gameTile {
 
 
 
-public class AStar {
-	public AStar() {
+public static class AStar {	
+
+	public static List<Vector2> navigate(Vector2 start, Vector2 dest) {
+
+		GameController gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
+		List<Vector2> directions = new List<Vector2>();
 		directions.Add (Vector2.up);
 		directions.Add (Vector2.left);
 		directions.Add (Vector2.down);
 		directions.Add (Vector2.right);
-		gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
-		maxID = 0;
-	}
-		
-	public List<Vector2> directions;
-	public GameController gc;
-	public int maxID; // ids are used to break ties in terms of F distance
-
-	public List<Vector2> navigate(Vector2 start, Vector2 dest) {
+		int maxID = 0;  // ids are used to break ties in terms of F distance
 		gameTile currentTile;
 		gameTile adjacentTile;
 
@@ -62,7 +58,7 @@ public class AStar {
 		// pathfind until we've included the destination tile in our final path
 		while (findInList (dest, closed) == -1) {
 			// determine the next tile to inspect based on being the closest to destination
-			int nextTileIndex = findLowestScoreIndex (currentTileIndex, open);
+			int nextTileIndex = findLowestScoreIndex (currentTile.id, open);
 			currentTileIndex = nextTileIndex;
 
 			// retrieve this tile for inspection
@@ -114,13 +110,13 @@ public class AStar {
 		return buildPath(dest,closed);
 	}
 
-	private int getH(Vector2 start, Vector2 dest) {
+	public static int getH(Vector2 start, Vector2 dest) {
 		// this is as simple as finding the manhattan distance from this position to the destination
 		Vector2 diff = start - dest;
 		return (int)(Mathf.Abs (diff.x) + Mathf.Abs (diff.y));
 	}
 
-	private int findLowestScoreIndex(int currentID, List<gameTile> tiles) {
+	public static int findLowestScoreIndex(int currentID, List<gameTile> tiles) {
 		int min = int.MaxValue;
 		int minIndex = 0;
 		// return the index of the tile with the lowest score
@@ -139,7 +135,7 @@ public class AStar {
 		return minIndex;
 	}
 
-	private int findInList(Vector2 loc, List<gameTile> tiles) {
+	public static int findInList(Vector2 loc, List<gameTile> tiles) {
 		// cycle through the list and see if any tiles are at this location
 		// return the index of the tile in the list if so, otherwise return -1
 		for (int i = 0; i < tiles.Count; i++) {
@@ -151,7 +147,7 @@ public class AStar {
 		return -1;
 	}
 
-	private int findInList(int id, List<gameTile> tiles) {
+	public static int findInList(int id, List<gameTile> tiles) {
 
 		// overloaded to work with id rather than location
 
@@ -166,7 +162,7 @@ public class AStar {
 		return -1;
 	}
 
-	private List<Vector2> buildPath(Vector2 dest, List<gameTile> tiles) {
+	public static List<Vector2> buildPath(Vector2 dest, List<gameTile> tiles) {
 		// walk backwards from the destination tile to the starting tile
 		// (don't add the starting tile because we know where we are)
 
