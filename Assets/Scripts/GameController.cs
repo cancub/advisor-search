@@ -6,14 +6,24 @@ public class GameController : MonoBehaviour {
 	public GameObject obstacles; 
 	public GameObject playingField;
 	public GameObject borders;
+	public GameObject characterPrefab;
+	public GameObject characters;
 	private Vector2 bottomLeft;
+	private Vector2 size;
+
 
 	// Use this for initialization
 	void Start () {
-		bottomLeft = new Vector2 (-1f * playingField.GetComponent<MeshFilter> ().mesh.bounds.size.x / 2f,
-			-1 * playingField.GetComponent<MeshFilter> ().mesh.bounds.size.z / 2f);
-		print (bottomLeft);
-		// create a character and place them in a location
+		// we need these values for finding points in the playing field
+		// (assume that everything is centered at (0,0)
+		bottomLeft = -1f * new Vector2 (playingField.GetComponent<MeshFilter> ().mesh.bounds.size.x / 2f,
+			playingField.GetComponent<MeshFilter> ().mesh.bounds.size.z / 2f);
+		size = -2 * bottomLeft;
+
+//		print (bottomLeft);
+		// create a character 
+		Instantiate(characterPrefab,characters.transform);
+
 	}
 	
 	// Update is called once per frame
@@ -51,5 +61,22 @@ public class GameController : MonoBehaviour {
 		}
 
 		return false;
+	}
+
+	public Vector2 emptyPointInGame() {
+		// used to locate an empty point in the game for placing a player or a desitnation marker
+
+		float x;
+		float y;
+
+		do {
+			// get x and y values somewhere in the playing field at the center of a tile
+			x = Mathf.Floor(Random.value * size.x + bottomLeft.x) + 0.5f;
+			y = Mathf.Floor(Random.value * size.y + bottomLeft.y) + 0.5f;
+
+			// check to see if this is a valid point to place something
+		} while (inObstacle (x, y));
+
+		return new Vector2 (x, y);
 	}
 }
