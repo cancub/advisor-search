@@ -2,6 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct wallSegment {
+	// a struct to hold the coordinates that describe a wall
+	public Vector2 p;
+	public Vector2 q;
+}
+
+public struct plaque {
+	public Vector2 nameLocation; // the midpoint of the side of the plaque closest to the prof
+	public Vector2 standingLocation; // where the character should move to in order to see the plaque
+	public wallSegment plaqueWall; // the wall that the plaque hangs on, used to determine if there is a line of sight to the plaque
+	public int profNumber; // the number of the associated prof
+}
+
 public class GameController : MonoBehaviour {
 	// class to control the functionality of the game
 
@@ -14,6 +27,7 @@ public class GameController : MonoBehaviour {
 	public GameObject marker;			// the X destination point for now
 	private Vector2 bottomLeft;			// the bottom left of the playing field
 	private Vector2 size;				// the height and width of the playing field
+	private List<plaque> plaques;
 
 	// Use this for initialization
 	void Start () {
@@ -22,6 +36,9 @@ public class GameController : MonoBehaviour {
 		bottomLeft = -1f * new Vector2 (playingField.GetComponent<MeshFilter> ().mesh.bounds.size.x / 2f,
 			playingField.GetComponent<MeshFilter> ().mesh.bounds.size.z / 2f);
 		size = -2 * bottomLeft;
+
+		// build the list of plaque information for the characters to obtain
+		populatePlaqueInfo ();
 
 		// place the marker somewhere random that works
 		marker.transform.position = emptyPointInGame ();
@@ -120,6 +137,71 @@ public class GameController : MonoBehaviour {
 	public Vector2 getDestination() {
 		// gameobjects in the game will want to know where they should be moving
 		return marker.transform.position;
+	}
+
+	private void populatePlaqueInfo() {
+		// build the list of necessary information for the characters concerning plaque information
+
+		plaques = new List<plaque> ();
+
+		GameObject go;
+		plaque newPlaque;
+
+		// all walls are 1x3 in size, so finding the position will allow us to find the lines segment of
+		// the wall that each plaque hangs on, given prior knowledge of the layout of the map
+
+		go = GameObject.Find ("wall1");
+		newPlaque.profNumber = 1;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, 1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, 0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, 0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, 0.5f);
+		plaques.Add (newPlaque);
+
+		go = GameObject.Find ("wall2");
+		newPlaque.profNumber = 2;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, 1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, 0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, 0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, 0.5f);
+		plaques.Add (newPlaque);
+
+		go = GameObject.Find ("wall3");
+		newPlaque.profNumber = 3;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (1f, 0);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (-0.51f, 0);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-0.5f, -1.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (-0.5f, 1.5f);
+		plaques.Add (newPlaque);
+
+		go = GameObject.Find ("wall4");
+		newPlaque.profNumber = 4;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (-1f, 0);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0.51f, 0);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (0.5f, -1.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (0.5f, 1.5f);
+		plaques.Add (newPlaque);
+
+		go = GameObject.Find ("wall5");
+		newPlaque.profNumber = 5;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, -1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, -0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, -0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, -0.5f);
+		plaques.Add (newPlaque);
+
+		go = GameObject.Find ("wall6");
+		newPlaque.profNumber = 6;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, -1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, -0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, -0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, -0.5f);
+		plaques.Add (newPlaque);
+	}
+
+	public List<plaque> getPlaqueInfo () {
+		// provide all the plaque information to the characters
+		return plaques;
 	}
 
 	private void MoveTarget(Ray ray) {

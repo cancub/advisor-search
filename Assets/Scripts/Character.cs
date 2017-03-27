@@ -10,6 +10,7 @@ public class Character : MonoBehaviour {
 	private List<Vector2> path;		// the remaining steps in the path to reach the destination
 	private bool moving;			// check for whether the character is in motion or not
 	private Vector2 nextTile;
+	private List<plaque> plaques;
 
 
 
@@ -17,8 +18,10 @@ public class Character : MonoBehaviour {
 	void Start () {
 		gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
 		transform.position = gc.emptyPointInGame ();
+		plaques = gc.getPlaqueInfo ();
 //		transform.position = new Vector3(-2.5f,-1.5f,0);
 		moving = false;
+
 	}
 	
 	// Update is called once per frame
@@ -27,8 +30,11 @@ public class Character : MonoBehaviour {
 		if (dest != gc.getDestination ()) {
 			// if so, update destination position
 			reroute ();
+//			foreach (plaque profPlaque in plaques) {
+//				print(profPlaque.profNumber.ToString() + ": " + 
+			//					Visibility.isHidden((Vector2)transform.position, profPlaque.nameLocation,profPlaque.plaqueWall.p,profPlaque.plaqueWall.q).ToString());
+//			}
 		}
-
 
 		if (moving) {
 			if ((Vector2)(transform.position) != nextTile) {
@@ -38,6 +44,11 @@ public class Character : MonoBehaviour {
 				moving = false;
 				// remove the most recent tile in the path
 				path.RemoveAt(0);
+
+				if (dest != gc.getDestination ()) {
+					// if so, update destination position
+					reroute ();
+				}
 			}
 		} else {
 			// we either:
@@ -56,6 +67,10 @@ public class Character : MonoBehaviour {
 		
 	}
 
+	private bool isPlaqueVisible(int index) {
+		return !Visibility.isHidden((Vector2)transform.position, plaques[index].nameLocation,plaques[index].plaqueWall.p,plaques[index].plaqueWall.q);
+	}
+
 	private void reroute() {
 		// figure out where we need to go
 		dest = gc.getDestination();
@@ -68,4 +83,6 @@ public class Character : MonoBehaviour {
 		// move along the path to the next tile
 		transform.position += updateMove;
 	}
+
+
 }
