@@ -24,7 +24,6 @@ public class GameController : MonoBehaviour {
 	public GameObject characterPrefab;	// the circle prefab that is used to show the agents
 	public GameObject characters;		// the parent object that contains all the characters
 	public int numCharacters;			// the number of characters in the game
-	public GameObject marker;			// the X destination point for now
 	private Vector2 bottomLeft;			// the bottom left of the playing field
 	private Vector2 size;				// the height and width of the playing field
 	private List<plaque> plaques;
@@ -40,10 +39,6 @@ public class GameController : MonoBehaviour {
 		// build the list of plaque information for the characters to obtain
 		populatePlaqueInfo ();
 
-		// place the marker somewhere random that works
-		marker.transform.position = emptyPointInGame ();
-//		marker.transform.position = new Vector3(2.5f,-2.5f,0);
-
 		// create the characters
 		for (int i = 0; i < numCharacters; i++) {
 			Instantiate (characterPrefab, characters.transform);
@@ -53,11 +48,6 @@ public class GameController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
-
-		// move the marker if the user has clicked somewhere that makes sense
-		if (Input.GetMouseButtonDown(0)) {
-			MoveTarget(Camera.main.ScreenPointToRay(Input.mousePosition));
-		}
 	}
 
 	public bool inObstacle(float x, float y) {
@@ -134,10 +124,10 @@ public class GameController : MonoBehaviour {
 		return new Vector2 (x, y);
 	}
 
-	public Vector2 getDestination() {
-		// gameobjects in the game will want to know where they should be moving
-		return marker.transform.position;
-	}
+//	public Vector2 getDestination() {
+//		// gameobjects in the game will want to know where they should be moving
+//		return marker.transform.position;
+//	}
 
 	private void populatePlaqueInfo() {
 		// build the list of necessary information for the characters concerning plaque information
@@ -168,7 +158,7 @@ public class GameController : MonoBehaviour {
 
 		go = GameObject.Find ("wall3");
 		newPlaque.profNumber = 3;
-		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (1f, 0);
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (-1f, 0);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (-0.51f, 0);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-0.5f, -1.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (-0.5f, 1.5f);
@@ -176,7 +166,7 @@ public class GameController : MonoBehaviour {
 
 		go = GameObject.Find ("wall4");
 		newPlaque.profNumber = 4;
-		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (-1f, 0);
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (1f, 0);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0.51f, 0);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (0.5f, -1.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (0.5f, 1.5f);
@@ -202,19 +192,5 @@ public class GameController : MonoBehaviour {
 	public List<plaque> getPlaqueInfo () {
 		// provide all the plaque information to the characters
 		return plaques;
-	}
-
-	private void MoveTarget(Ray ray) {
-		RaycastHit hit;
-		if (Physics.Raycast (ray, out hit)) {
-			// get the x and y positions of the click, but center in the corresponding tile
-			float x = Mathf.Floor(hit.point.x) + 0.5f;
-			float y = Mathf.Floor(hit.point.y) + 0.5f;
-
-			// move the marker if the click occured in a position that is free from objects
-			if (!inObstacle(x,y)){
-				marker.transform.position = new Vector3 (x, y, 0);
-			}
-		}
 	}
 }
