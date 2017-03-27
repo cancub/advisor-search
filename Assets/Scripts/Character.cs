@@ -8,7 +8,6 @@ public class Character : MonoBehaviour {
 	private GameController gc;		// reference to the game controller
 	private Vector2 dest;			// the current destination of this character
 	private List<Vector2> path;		// the remaining steps in the path to reach the destination
-	private bool moving;			// check for whether the character is in motion or not
 	private Vector2 nextTile;
 	private List<plaque> plaques;
 
@@ -19,50 +18,37 @@ public class Character : MonoBehaviour {
 		gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
 		transform.position = gc.emptyPointInGame ();
 		plaques = gc.getPlaqueInfo ();
-//		transform.position = new Vector3(-2.5f,-1.5f,0);
-		moving = false;
+		getRoute ();
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		// check if x has moved
-		if (dest != gc.getDestination ()) {
-			// if so, update destination position
-			reroute ();
-//			foreach (plaque profPlaque in plaques) {
-//				print(profPlaque.profNumber.ToString() + ": " + 
-			//					Visibility.isHidden((Vector2)transform.position, profPlaque.nameLocation,profPlaque.plaqueWall.p,profPlaque.plaqueWall.q).ToString());
-//			}
-		}
 
-		if (moving) {
+		if (path.Count > 0) {
+			// there are still moves to make
 			if ((Vector2)(transform.position) != nextTile) {
 				// still on the way to the next tile, so keep going
 				takeStep ();
 			} else {
-				moving = false;
-				// remove the most recent tile in the path
-				path.RemoveAt(0);
-
+				// check if x has moved
 				if (dest != gc.getDestination ()) {
-					// if so, update destination position
-					reroute ();
+					// if so, update destination position and find the new route
+					getRoute ();
+					takeStep ();
+				} else {
+					// remove the most recent tile in the path
+					path.RemoveAt (0);
+					if (path.Count > 0) {
+						nextTile = path [0];
+						updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
+					}
 				}
 			}
-		} else {
-			// we either:
-			// A) haven't started along a path or have reached the destination
-			// B) we have just made it to the next tile
-			// only move in B
- 			if (path.Count > 0) {
-				// we are stationary and there are more movements to make
-				nextTile = path[0];
-				updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
-
-				moving = true;
-			}
-
+		} else if (dest != gc.getDestination ()) {
+			// if so, update destination position and find the new route
+			getRoute ();
+			takeStep ();
 		}
 		
 	}
@@ -71,11 +57,13 @@ public class Character : MonoBehaviour {
 		return !Visibility.isHidden((Vector2)transform.position, plaques[index].nameLocation,plaques[index].plaqueWall.p,plaques[index].plaqueWall.q);
 	}
 
-	private void reroute() {
+	private void getRoute() {
 		// figure out where we need to go
 		dest = gc.getDestination();
 		// build the path from the current position to there
 		path = AStar.navigate (transform.position, dest);
+		nextTile = path[0];
+		updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
 	}
 
 
