@@ -24,6 +24,8 @@ public class GameController : MonoBehaviour {
 	public GameObject characterPrefab;	// the circle prefab that is used to show the agents
 	public GameObject characters;		// the parent object that contains all the characters
 	public int numCharacters;			// the number of characters in the game
+	public float moveSpeedPercent;	// the percent of the distance between tiles that the character will move in each update
+	public int pathWindow;				// how many steps a player will take in each window
 	private Vector2 bottomLeft;			// the bottom left of the playing field
 	private Vector2 size;				// the height and width of the playing field
 	private List<plaque> plaques;
@@ -192,5 +194,14 @@ public class GameController : MonoBehaviour {
 	public List<plaque> getPlaqueInfo () {
 		// provide all the plaque information to the characters
 		return plaques;
+	}
+
+	public float getMoveSpeed() {
+		return moveSpeedPercent;
+	}
+
+
+	public int getPathWindow() {
+		return pathWindow;
 	}
 }

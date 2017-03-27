@@ -11,7 +11,7 @@ public struct gameTile {
 
 public static class AStar {	
 
-	public static List<Vector2> navigate(Vector2 start, Vector2 dest) {
+	public static List<Vector2> navigate(Vector2 start, Vector2 dest, int window) {
 
 		GameController gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
 		List<Vector2> directions = new List<Vector2>();
@@ -107,7 +107,7 @@ public static class AStar {
 			}
 		}
 
-		return buildPath(dest,closed);
+		return buildPath(dest,closed, window);
 	}
 
 	public static int getH(Vector2 start, Vector2 dest) {
@@ -162,7 +162,7 @@ public static class AStar {
 		return -1;
 	}
 
-	public static List<Vector2> buildPath(Vector2 dest, List<gameTile> tiles) {
+	public static List<Vector2> buildPath(Vector2 dest, List<gameTile> tiles, int window) {
 		// walk backwards from the destination tile to the starting tile
 		// (don't add the starting tile because we know where we are)
 
@@ -176,7 +176,10 @@ public static class AStar {
 			// update the current id
 			currentID = findInList(tiles [currentID].parent,tiles);
 		}
-
-		return path;
+		if (path.Count > window) {			
+			return path.GetRange (0, window);
+		} else {
+			return path;
+		}
 	}
 }

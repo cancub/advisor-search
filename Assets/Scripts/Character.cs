@@ -8,10 +8,12 @@ public struct professor {
 }
 
 public class Character : MonoBehaviour {
-	public float moveSpeedPercent;	// the percent of the distance between tiles that the character will move in each update
+	private float moveSpeedPercent;	// the percent of the distance between tiles that the character will move in each update
+	private int pathWindow;
 	private Vector3 updateMove;
 	private GameController gc;		// reference to the game controller
-	private Vector2 dest;			// the current destination of this character
+	private Vector2 windowDest;		// the current destination of this character
+	private Vector2 finalDest;		// the location that the character is ultimately trying to get to
 	private List<Vector2> path;		// the remaining steps in the path to reach the destination
 	private Vector2 nextTile;
 	private List<plaque> plaques;
@@ -26,8 +28,9 @@ public class Character : MonoBehaviour {
 		transform.position = gc.emptyPointInGame ();
 		plaques = gc.getPlaqueInfo ();
 		currentProf = (int)(Mathf.Floor(Random.Range (0, 6f)));
+		pathWindow = gc.getPathWindow ();
+		moveSpeedPercent = gc.getMoveSpeed ();
 		getRoute (plaques[currentProf].standingLocation);
-
 	}
 	
 	// Update is called once per frame
@@ -42,11 +45,15 @@ public class Character : MonoBehaviour {
 				// remove the most recent tile in the path
 				path.RemoveAt (0);
 				if (path.Count > 0) {
-					nextTile = path [0];
-					updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
+					// keep walking if need be
+					startPath();
 				}
 
 			}
+		} else if ((Vector2)(transform.position) != finalDest) {
+			// the most recent window ended and now we need to get the next window
+			getRoute (plaques[currentProf].standingLocation);
+			takeStep ();
 		}
 		
 	}
@@ -57,13 +64,16 @@ public class Character : MonoBehaviour {
 
 	private void getRoute(Vector2 loc) {
 		// figure out where we need to go
-		dest = loc;
+		finalDest = loc;
 		// build the path from the current position to there
-		path = AStar.navigate (transform.position, dest);
+		path = AStar.navigate (transform.position, finalDest, pathWindow);
+		startPath ();
+	}
+
+	private void startPath() {
 		nextTile = path[0];
 		updateMove = moveSpeedPercent * ((Vector3)nextTile - transform.position);
 	}
-
 
 	private void takeStep() {
 		// move along the path to the next tile
