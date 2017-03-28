@@ -28,10 +28,14 @@ public class GameController : MonoBehaviour {
 	public int pathWindow;				// how many steps a player will take in each window
 	private Vector2 bottomLeft;			// the bottom left of the playing field
 	private Vector2 size;				// the height and width of the playing field
-	private List<plaque> plaques;
+	private List<plaque> plaques;		// list of the plaque information
+	private List<Vector2> profLocs;		// list of professor information
+	private int characterCount;			// a count of the number of characters currently walking
+
 
 	// Use this for initialization
 	void Start () {
+
 		// we need these values for finding points in the playing field
 		// (assume that everything is centered at (0,0)
 		bottomLeft = -1f * new Vector2 (playingField.GetComponent<MeshFilter> ().mesh.bounds.size.x / 2f,
@@ -39,7 +43,7 @@ public class GameController : MonoBehaviour {
 		size = -2 * bottomLeft;
 
 		// build the list of plaque information for the characters to obtain
-		populatePlaqueInfo ();
+		populateMapInfo ();
 
 		// create the characters
 		for (int i = 0; i < numCharacters; i++) {
@@ -131,10 +135,11 @@ public class GameController : MonoBehaviour {
 //		return marker.transform.position;
 //	}
 
-	private void populatePlaqueInfo() {
+	private void populateMapInfo() {
 		// build the list of necessary information for the characters concerning plaque information
 
 		plaques = new List<plaque> ();
+		profLocs = new List<Vector2> ();
 
 		GameObject go;
 		plaque newPlaque;
@@ -143,57 +148,95 @@ public class GameController : MonoBehaviour {
 		// the wall that each plaque hangs on, given prior knowledge of the layout of the map
 
 		go = GameObject.Find ("wall1");
+		newPlaque.profNumber = 0;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, 1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, 0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, 0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, 0.5f);
+		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (-2f, 2f));
+
+		go = GameObject.Find ("wall2");
 		newPlaque.profNumber = 1;
 		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, 1f);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, 0.51f);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, 0.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, 0.5f);
 		plaques.Add (newPlaque);
-
-		go = GameObject.Find ("wall2");
-		newPlaque.profNumber = 2;
-		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, 1f);
-		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, 0.51f);
-		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, 0.5f);
-		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, 0.5f);
-		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (-2f, 2f));
 
 		go = GameObject.Find ("wall3");
-		newPlaque.profNumber = 3;
+		newPlaque.profNumber = 2;
 		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (-1f, 0);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (-0.51f, 0);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-0.5f, -1.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (-0.5f, 1.5f);
 		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (-2f, -2f));
 
 		go = GameObject.Find ("wall4");
-		newPlaque.profNumber = 4;
+		newPlaque.profNumber = 3;
 		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (1f, 0);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0.51f, 0);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (0.5f, -1.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (0.5f, 1.5f);
 		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (2f, 2f));
 
 		go = GameObject.Find ("wall5");
+		newPlaque.profNumber = 4;
+		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, -1f);
+		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, -0.51f);
+		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, -0.5f);
+		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, -0.5f);
+		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (2f, -2f));
+
+		go = GameObject.Find ("wall6");
 		newPlaque.profNumber = 5;
 		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, -1f);
 		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, -0.51f);
 		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, -0.5f);
 		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, -0.5f);
 		plaques.Add (newPlaque);
-
-		go = GameObject.Find ("wall6");
-		newPlaque.profNumber = 6;
-		newPlaque.standingLocation = (Vector2)(go.transform.position) + new Vector2 (0, -1f);
-		newPlaque.nameLocation = (Vector2)(go.transform.position) + new Vector2 (0, -0.51f);
-		newPlaque.plaqueWall.p = (Vector2)(go.transform.position) + new Vector2 (-1.5f, -0.5f);
-		newPlaque.plaqueWall.q = (Vector2)(go.transform.position) + new Vector2 (1.5f, -0.5f);
-		plaques.Add (newPlaque);
+		profLocs.Add (newPlaque.standingLocation + new Vector2 (2f, -2f));
 	}
 
 	public List<plaque> getPlaqueInfo () {
-		// provide all the plaque information to the characters
-		return plaques;
+		// provide all the plaque information to the characters except for
+		// the number on the plaque and randomize the list to ensure that the
+		// character has to learn information
+		return randomizedList(plaques);
+	}
+
+	private List<plaque> randomizedList(List<plaque> inputList)
+	{
+
+		int seed = (int)System.Environment.TickCount;
+//		print (seed);
+		Random.InitState (seed);
+
+		List<int> usedValues = new List<int> ();
+		List<plaque> randomList = new List<plaque>();
+		int val;
+
+		while (randomList.Count < 6) {
+			val = Random.Range(0, 6);
+			while (usedValues.Contains (val)) {
+				val = Random.Range(0, 6);
+			}
+
+			// randomly add a plaque
+			plaque tempPlaque = inputList [val];
+			// obscure the number on the plaque so that the character has to query the gamecontroller
+			// upon reaching the plaque
+			tempPlaque.profNumber = -1;
+
+			randomList.Add (tempPlaque);
+		}
+
+		return randomList;
+
 	}
 
 	public float getMoveSpeed() {
@@ -203,5 +246,28 @@ public class GameController : MonoBehaviour {
 
 	public int getPathWindow() {
 		return pathWindow;
+	}
+
+	public int readProfNumber(Vector2 plaqueLocation) {
+		// once the character sees the id, they will read it based on its location
+		foreach (plaque p in plaques) {
+			if (p.nameLocation == plaqueLocation) {
+				return p.profNumber;
+			}
+		}
+
+		// should never reach here
+		print ("there was a problem identifying the prof");
+		return -1;
+	}
+
+	public Vector2 getProfLocation(int profID) {
+		// characters inquire as to the position of a professor when they read the ID
+		return profLocs [profID];
+	}
+
+	public int getCharacterID() {
+		// this id will allow the characters to identify themselves during debugging
+		return ++characterCount;
 	}
 }

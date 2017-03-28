@@ -49,8 +49,6 @@ public static class Visibility {
 		return (val > 0)? 1: 2; // clock or counterclock wise
 	}
 
-
-
 	// used to check if colinear lines share points
 	private static bool onSegment(Vector2 p, Vector2 q, Vector2 r)
 	{
