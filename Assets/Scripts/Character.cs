@@ -334,17 +334,8 @@ public class Character : MonoBehaviour {
 	}
 
 	private bool readProfDestination() {
-
-		Vector2 nextProfDest = unknownDest;
-
-		foreach (professor prof in knownProfessors) {
-			if (prof.id == currentProfID) {
-				nextProfDest = prof.location;
-				break;
-			}
-		}
 		// can only get so close to prof, don't want any ethics problems
-		finalDest = gc.getClosestSpot((Vector2)transform.position, nextProfDest);
+		finalDest = gc.getClosestSpot(currentProfID);
 		// returns true if we already knew about this prof's location
 		return finalDest != unknownDest;
 	}
@@ -869,6 +860,9 @@ public class Character : MonoBehaviour {
 			trajectory.x *= moveSpeedPercent;
 			trajectory.y *= moveSpeedPercent;
 			trajectory.z *= moveSpeedPercent;
+//			if (((Vector2)trajectory).magnitude > moveSpeedPercent) {
+//				print (((Vector2)trajectory).magnitude.ToString() + " = going too fast!!!!!!!!!!!!!!!!!!!");
+//			}
 		}
 
 		return true;

@@ -335,12 +335,13 @@ public class GameController : MonoBehaviour {
 		return finalPath;
 	}
 
-	public Vector2 getClosestSpot(Vector2 start, Vector2 loc) {
-		// look at the nodes adjacent to a particular location (likely the prof) and return the tile that
-		// is closest to the prof and the shortest walk distance from the character
+	public Vector2 getClosestSpot(int profID) {
+		// look at the nodes adjacent to a particular prof's location and return the tile that
+		// is closest to the prof and the shortest walk distance from the plaque
 
 		List<Vector2> emptyTiles = new List<Vector2>();
 		Vector2 testTile;
+		Vector2 loc = getProfLocation (profID);
 
 		// scan through the empty tiles one move away from the prof
 		for (float i = -1f; i <= 1f; i += 1f) {
@@ -360,9 +361,11 @@ public class GameController : MonoBehaviour {
 		float minDist = float.MaxValue;
 		Vector2 bestLoc = new Vector2();
 
+		Vector2 plaqueLoc = plaques [profID].nameLocation;
+
 		foreach (Vector2 tile in emptyTiles) {
-			if ((start - tile).magnitude < minDist) {
-				minDist = (start - tile).magnitude;
+			if ((plaqueLoc - tile).magnitude < minDist) {
+				minDist = (plaqueLoc - tile).magnitude;
 				bestLoc = tile;
 			}
 		}
