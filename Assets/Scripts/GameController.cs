@@ -21,6 +21,7 @@ public class GameController : MonoBehaviour {
 	public GameObject obstacles; 		// parent object of all the obstactles in the game
 	public GameObject playingField;		// board on which the game will be played
 	public GameObject borders;			// boundary objects which define the field
+	public GameObject profs;			//
 	public GameObject characterPrefab;	// the circle prefab that is used to show the agents
 	public GameObject characters;		// the parent object that contains all the characters
 	public int numCharacters;			// the number of characters in the game
@@ -115,7 +116,7 @@ public class GameController : MonoBehaviour {
 
 	public Vector2 emptyPointInGame() {
 		// used to locate an empty point in the game for placing a player or a desitnation marker
-
+//TODO: update this to include spots currently inhabitted by other stationary players as well as profs
 		float x;
 		float y;
 
@@ -251,13 +252,12 @@ public class GameController : MonoBehaviour {
 	public int readProfNumber(Vector2 plaqueLocation) {
 		// once the character sees the id, they will read it based on its location
 		foreach (plaque p in plaques) {
-			if (p.nameLocation == plaqueLocation) {
+			if (p.standingLocation == plaqueLocation) {
 				return p.profNumber;
 			}
 		}
 
-		// should never reach here
-		print ("there was a problem identifying the prof");
+		// the character was not close enough to any plaques
 		return -1;
 	}
 
@@ -266,8 +266,100 @@ public class GameController : MonoBehaviour {
 		return profLocs [profID];
 	}
 
+	public plaque getPlaque(int profID) {
+		// characters inquire as to the position of a professor when they read the ID
+		return plaques[profID];
+	}
+
 	public int getCharacterID() {
 		// this id will allow the characters to identify themselves during debugging
 		return ++characterCount;
+	}
+
+	public List<Vector3> obtainCombinedPath (Vector2 start, Vector2 end, int pathSize) {
+		// combined path in the sense that it is in relation to all other paths in 3D space
+		List<Vector2> newPath;
+		// if a location is at a professor, return the nearest adjacent spot
+		if (toProfessor(end)) {
+			newPath = AStar.navigate (start, getClosestSpot(start,end));
+		} else {
+			newPath = AStar.navigate (start, end);
+		}
+
+		// at this point we have the complete path, but we just want a window of a certain size.
+
+		if (pathSize < newPath.Count) {
+			// the size of the route is less than the total number of spaces in the window, so cut it down to size
+			newPath = newPath.GetRange(0,pathSize);
+		}
+
+		// finally, count down from 5 for the time if the pathSize is smaller than the window size. the implication
+		// here is that a second call was made because the first path stopped abruptly at a plaque and there was still
+		// more time to move in the window
+
+		Vector3 tempTile;
+		List<Vector3> finalPath = new List<Vector3> ();
+
+		if (pathSize < pathWindow) {
+			// count backwards from 5 to set the time (3rd dimension)
+			for (int i = 0; i < pathSize; i++) {
+				tempTile = newPath [pathSize - 1 - i];
+				tempTile.z = (float)(5 - i);
+				finalPath.Insert(0,tempTile);
+			}
+		} else {
+			// this is the start of a new window, so count upwards
+			for (int i = 0; i < pathSize; i++) {
+				tempTile = newPath [i];
+				tempTile.z = i + 1;
+				finalPath.Add(tempTile);
+			}
+		}
+
+		return finalPath;
+	}
+
+	public Vector2 getClosestSpot(Vector2 start, Vector2 loc) {
+		// look at the nodes adjacent to a particular location (likely the prof) and return the tile that
+		// is closest to the prof and the shortest walk distance from the character
+
+		List<Vector2> emptyTiles = new List<Vector2>();
+		Vector2 testTile;
+
+		// scan through the empty tiles one move away from the prof
+		for (float i = -1f; i <= 1f; i += 1f) {
+			for (float j = -1f; j <= 1f; j += 1f) {
+				testTile = loc;
+				testTile.x += i;
+				testTile.y += j;
+				if (!inObstacle (testTile)) {
+					emptyTiles.Add (testTile);
+				}
+			}
+		}
+
+		// pick the tile that is closest to the character
+		float minDist = float.MaxValue;
+		Vector2 bestLoc = new Vector2();
+
+		foreach (Vector2 tile in emptyTiles) {
+			if ((start - tile).magnitude < minDist) {
+				minDist = (start - tile).magnitude;
+				bestLoc = tile;
+			}
+		}
+
+		return bestLoc;
+
+	}
+
+	private bool toProfessor(Vector2 loc) {
+		foreach (Vector2 prof in profLocs) {
+			if (prof == loc) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
