@@ -70,7 +70,8 @@ public class Character : MonoBehaviour {
 		// ensure that each character has a different random number generator
 
 		lastProfID = int.MaxValue;
-		currentProfID  = lastProfID;
+		currentProfID  = gc.getRandProfID();
+		print ("searching for " + currentProfID.ToString ());
 
 		moveSpeedPercent = gc.getMoveSpeed ();
 
@@ -229,7 +230,7 @@ public class Character : MonoBehaviour {
 		// here we figure out if we know where the new prof is and if we should be waiting
 
 		// subbranch implemented as a sequence
-		if (profLocationKnown ()) {
+		if (profLocationKnown (currentProfID)) {
 			// heading directly to a prof
 			if (setGoToProfFlag ()) {
 				//selector subbranch
@@ -312,7 +313,7 @@ public class Character : MonoBehaviour {
 		// check if we're supposed to be directly to a prof and then set the destination to that prof
 
 		// sequence
-		if (getGoToProfFlag ()) {
+		if (goToProf) {
 			// know where the prof is, so set the destination
 			// will return true
 			return readProfDestination();
@@ -347,19 +348,20 @@ public class Character : MonoBehaviour {
 	private bool getUnknownPlaque() {
 
 		// select from the ids of unknown professor locations to get the next plaque to visit
-		currentProfID = gc.getRandProfID();
-//		currentProfID = 2;
+		randomProfID = gc.getRandProfID();
 
-		while (profLocationKnown ()) {
-			currentProfID = gc.getRandProfID();
+		while (profLocationKnown (randomProfID)) {
+			randomProfID = gc.getRandProfID();
 		}
+
+		print ("will check out " + randomProfID.ToString ());
 
 		return true;
 	}
 
 
 	private bool setPlaqueDestination() {
-		Vector2 plaqueDest = gc.getPlaque(currentProfID).standingLocation;
+		Vector2 plaqueDest = gc.getPlaque(randomProfID).standingLocation;
 		finalDest = plaqueDest;
 		return finalDest == plaqueDest;
 	}
@@ -647,9 +649,23 @@ public class Character : MonoBehaviour {
 
 	private bool addNewProfessor() {
 		professor newProf;
-		newProf.id = currentProfID;
-		newProf.location = gc.getProfLocation (currentProfID);
+		int newID = gc.readProfNumber ((Vector2)finalDest);
+
+		// notify the route planning parts of the tree that we have found the plaque related to this
+		// prof and can now go directly to aid prof
+		if (newID == currentProfID) {
+			newProf.id = currentProfID;
+			newProf.location = gc.getProfLocation (currentProfID);
+		} else {
+			newProf.id = randomProfID;
+			newProf.location = gc.getProfLocation (randomProfID);
+		}
+
+
 		knownProfessors.Add (newProf);
+		foreach (professor prof in knownProfessors) {
+			print ("known: " + prof.id.ToString ());
+		}
 		return true;
 	}
 
@@ -728,11 +744,11 @@ public class Character : MonoBehaviour {
 		return !pathPrecendence;
 	}
 
-	public bool profLocationKnown() {
+	public bool profLocationKnown(int id) {
 		// look at the id of the current prof and see if it shows up anywhere in the list
 		// of known professor locations
 		foreach (professor prof in knownProfessors) {
-			if (currentProfID == prof.id) {
+			if (id == prof.id) {
 				return true;
 			}
 		}
