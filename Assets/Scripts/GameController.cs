@@ -32,6 +32,7 @@ public class GameController : MonoBehaviour {
 	private List<plaque> plaques;		// list of the plaque information
 	private List<Vector2> profLocs;		// list of professor information
 	private int characterCount;			// a count of the number of characters currently walking
+	private List<bool> characterPriorities;	// a check to see which characters should be scheduled in the algorithm first
 
 
 	// Use this for initialization
@@ -49,6 +50,7 @@ public class GameController : MonoBehaviour {
 		// create the characters
 		for (int i = 0; i < numCharacters; i++) {
 			Instantiate (characterPrefab, characters.transform);
+			characterPriorities.Add (false);
 		}
 
 	}
