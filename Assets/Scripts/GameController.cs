@@ -33,6 +33,7 @@ public class GameController : MonoBehaviour {
 	private List<Vector2> profLocs;		// list of professor information
 	private int characterCount;			// a count of the number of characters currently walking
 	private List<bool> characterPriorities;	// a check to see which characters should be scheduled in the algorithm first
+	private List<List<List<int>>> AStarGrid; // the grid to be used for pathfinding
 
 
 	// Use this for initialization
@@ -40,12 +41,13 @@ public class GameController : MonoBehaviour {
 
 		// we need these values for finding points in the playing field
 		// (assume that everything is centered at (0,0)
-		bottomLeft = -1f * new Vector2 (playingField.GetComponent<MeshFilter> ().mesh.bounds.size.x / 2f,
-			playingField.GetComponent<MeshFilter> ().mesh.bounds.size.z / 2f);
+		bottomLeft = -10f * new Vector2 (playingField.transform.localScale.x / 2f, playingField.transform.localScale.z / 2f);
 		size = -2 * bottomLeft;
 
 		// build the list of plaque information for the characters to obtain
 		populateMapInfo ();
+
+		characterPriorities = new List<bool> ();
 
 		// create the characters
 		for (int i = 0; i < numCharacters; i++) {
@@ -290,49 +292,11 @@ public class GameController : MonoBehaviour {
 		return ++characterCount;
 	}
 
-	public List<Vector3> obtainCombinedPath (Vector2 start, Vector2 end, int pathSize) {
+	public List<Vector3> obtainCombinedPath (Vector2 start, Vector2 end, int pathSize, int id) {
 		// combined path in the sense that it is in relation to all other paths in 3D space
 		List<Vector2> newPath;
-		newPath = AStar.navigate (start, end);
+		newPath = AStar.navigate (start, end, , id);
 
-		// at this point we have the complete path, but we just want a window of a certain size.
-
-		if (pathSize < newPath.Count) {
-			// the size of the route is less than the total number of spaces in the window, so cut it down to size
-			newPath = newPath.GetRange(0,pathSize);
-		}
-
-		// finally, count down from 5 for the time if the pathSize is smaller than the window size. the implication
-		// here is that a second call was made because the first path stopped abruptly at a plaque and there was still
-		// more time to move in the window
-
-		Vector3 tempTile;
-		List<Vector3> finalPath = new List<Vector3> ();
-
-		if (pathSize < pathWindow) {
-			// count backwards from 5 to set the time (3rd dimension)
-
-// TODO: figure out what happens when we request 4, but the total number of spaces available to walk is less than 4
-
-			// duplicate the last entry until we get to the desired number of spaces
-			while (newPath.Count < pathSize) {
-				newPath.Add (newPath [newPath.Count - 1]);
-			}
-
-			for (int i = 0; i < pathSize; i++) {
-				tempTile = newPath [pathSize - 1 - i];
-				tempTile.z = (float)(5 - i);
-				finalPath.Insert(0,tempTile);
-			}
-		} else {
-			int totalSize = (newPath.Count < pathSize) ? newPath.Count : pathSize;
-			// this is the start of a new window, so count upwards
-			for (int i = 0; i < totalSize; i++) {
-				tempTile = newPath [i];
-				tempTile.z = i + 1;
-				finalPath.Add(tempTile);
-			}
-		}
 
 		return finalPath;
 	}
@@ -388,5 +352,30 @@ public class GameController : MonoBehaviour {
 
 	public int getRandProfID(){
 		return (int)Random.Range (0, 6f);
+	}
+
+	public void setPriority(int id, bool p){
+		characterPriorities [id] = p;
+	}
+
+	private List<List<List<int>>> getWindowedGraph() {
+		// build a grid of int that has a height and width of the playing field and depth of the window size
+		List<List<List<int>>> graph = new List<List<List<int>>>();
+
+		for (int i = 0; i < size.y; i++) {
+			graph [i] = new List<List<int>> ();
+			for (int j = 0; j < size.x; j++) {
+				graph [i] [j] = new List<int> ();
+				for (int k = 0; k < 20; k++){
+					if (inObstacle ((float)i + 0.5f, (float)j + 0.5f)) {
+						graph [i] [j] [k] = -1;
+					} else {
+						graph [i] [j] [k] = 0;
+					}
+				}
+			}
+		}
+
+		return graph;
 	}
 }

@@ -739,11 +739,13 @@ public class Character : MonoBehaviour {
 	private bool setPathPrecedence() {
 		// order or precendence for path planning should be stationary before mobile
 		pathPrecendence = true;
+		gc.setPriority (myID, pathPrecendence);
 		return pathPrecendence;
 	}
 
 	private bool resetPathPrecedence() {
 		pathPrecendence = false;
+		gc.setPriority (myID, pathPrecendence);
 		return !pathPrecendence;
 	}
 

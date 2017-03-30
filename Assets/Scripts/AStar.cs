@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public struct gameTile {
-	public Vector2 position;
+	public Vector3 position;
 	public int G,F,id,parent;
 }
 
@@ -11,26 +11,32 @@ public struct gameTile {
 
 public static class AStar {	
 
-	public static List<Vector2> navigate(Vector2 start, Vector2 dest) {
+	public static List<List<List<int>>> navigate(Vector2 start, Vector2 dest, List<List<List<int>>> grid, int id) {
 
 		GameController gc = (GameController)GameObject.Find ("GameController").GetComponent (typeof(GameController));
-		List<Vector2> directions = new List<Vector2>();
-		directions.Add (Vector2.up);
-		directions.Add (Vector2.left);
-		directions.Add (Vector2.down);
-		directions.Add (Vector2.right);
+		List<Vector3> directions = new List<Vector3>();
+
+		directions.Add (new Vector3(0,1f,1f));
+		directions.Add (new Vector3(-1f,0,1f));
+		directions.Add (new Vector3(0,-1f,1f));
+		directions.Add (new Vector3(1f,0,1f));
+		directions.Add (new Vector3(0,0,1f)); // pause
+
 		int maxID = 0;  // ids are used to break ties in terms of F distance
 		gameTile currentTile;
 		gameTile adjacentTile;
+
+		Vector3 v3Start = new Vector3 (start.x, start.y, 0);
+		Vector3 v3End = new Vector3 (dest.x, dest.y, (float)(grid [0] [0].Count - 1));
 
 		// the initialization phase
 		List<gameTile> open = new List<gameTile> ();
 		List<gameTile> closed = new List<gameTile> ();
 
 		// add current position to closed list
-		currentTile.position = start;
+		currentTile.position = v3Start;
 		currentTile.G = 0;
-		currentTile.F = getH (currentTile.position, dest) + currentTile.G;
+		currentTile.F = getH (currentTile.position, v3End) + currentTile.G;
 		currentTile.id = maxID++;
 		currentTile.parent = currentTile.id;
 		closed.Add(currentTile);
@@ -38,11 +44,11 @@ public static class AStar {
 		// add all manhattan adjacent tiles to open list if they are not in an obstacle
 		for( int i = 0; i < 4; i++) {
 
-			if (!gc.inObstacle (directions[i] + start)) {
+			if (!gc.inObstacle (directions[i] + v3Start)) {
 				// create a new gameTile for this location
-				adjacentTile.position = directions[i] + start;
+				adjacentTile.position = directions[i] + v3Start;
 				adjacentTile.G = 1;
-				adjacentTile.F = getH (adjacentTile.position, dest) + adjacentTile.G;
+				adjacentTile.F = getH (adjacentTile.position, v3End) + adjacentTile.G;
 				adjacentTile.id = maxID++;
 				adjacentTile.parent = 0;
 				open.Add (adjacentTile);
@@ -56,7 +62,7 @@ public static class AStar {
 		// now comes the actual algorithm
 
 		// pathfind until we've included the destination tile in our final path
-		while (findInList (dest, closed) == -1) {
+		while (findInList (v3End, closed) == -1) {
 			// determine the next tile to inspect based on being the closest to destination
 			int nextTileIndex = findLowestScoreIndex (currentTile.id, open);
 			currentTileIndex = nextTileIndex;
@@ -72,10 +78,10 @@ public static class AStar {
 
 			// look in the four directions around this tile
 			for (int i = 0; i < 4; i++) {
-				Vector2 testPos = directions [i] + currentTile.position;
+				Vector3 testPos = directions [i] + currentTile.position;
 
 				// we can't add tiles that exist as part of an obstacle or are already in the closed list
-				if (!gc.inObstacle (testPos) && findInList (testPos, closed) == -1) {
+				if (grid[(int)testPos.x][(int)testPos.y][(int)testPos.z] == 0 && findInList (testPos, closed) == -1) {
 					// now that we know this is a viable tile, check if it's already been added
 					int testIndex = findInList (testPos, open);
 
@@ -83,7 +89,7 @@ public static class AStar {
 						// create a new gameTile for this location
 						adjacentTile.position = testPos;
 						adjacentTile.G = currentTile.G + 1;
-						adjacentTile.F = getH (testPos, dest) + adjacentTile.G;
+						adjacentTile.F = getH (testPos, v3End) + adjacentTile.G;
 						adjacentTile.id = maxID++;
 						adjacentTile.parent = currentTile.id;
 						open.Add (adjacentTile);
@@ -107,13 +113,13 @@ public static class AStar {
 			}
 		}
 
-		return buildPath(dest,closed);
+		return buildPath(v3End,closed,grid, id);
 	}
 
-	public static int getH(Vector2 start, Vector2 dest) {
+	public static int getH(Vector3 start, Vector3 dest) {
 		// this is as simple as finding the manhattan distance from this position to the destination
-		Vector2 diff = start - dest;
-		return (int)(Mathf.Abs (diff.x) + Mathf.Abs (diff.y));
+		Vector3 diff = start - dest;
+		return (int)(Mathf.Abs (diff.x) + Mathf.Abs (diff.y) + Mathf.Abs(diff.z));
 	}
 
 	public static int findLowestScoreIndex(int currentID, List<gameTile> tiles) {
@@ -135,7 +141,7 @@ public static class AStar {
 		return minIndex;
 	}
 
-	public static int findInList(Vector2 loc, List<gameTile> tiles) {
+	public static int findInList(Vector3 loc, List<gameTile> tiles) {
 		// cycle through the list and see if any tiles are at this location
 		// return the index of the tile in the list if so, otherwise return -1
 		for (int i = 0; i < tiles.Count; i++) {
@@ -162,23 +168,25 @@ public static class AStar {
 		return -1;
 	}
 
-	public static List<Vector2> buildPath(Vector2 dest, List<gameTile> tiles) {
+	public static List<List<List<int>>> buildPath(Vector3 dest, List<gameTile> tiles, List<List<List<int>>> grid, int id) {
 		// walk backwards from the destination tile to the starting tile, appending a time
 		// (don't add the starting tile because we know where we are)
 
-		List<Vector2> fullPath = new List<Vector2> ();
-
 		int currentID = findInList (dest, tiles);
-
+		int layer = 0;
 		while (tiles [currentID].id != 0) {
-			// insert the position at the front of the path and, time-wise, at the end of the window
-			Vector2 newTile = tiles [currentID].position;
-			fullPath.Insert(0,newTile);
+			
+			Vector3 newTile = tiles [currentID].position;
+			grid[(int)newTile.x][(int)newTile.y][(int)newTile.z] = id;
+			if (layer > 0) {
+				grid [(int)newTile.x] [(int)newTile.y] [(int)newTile.z + 1] = id;
+			}
+			layer++;
 			// update the current id
 			currentID = findInList(tiles [currentID].parent,tiles);
 		}
 
-		return fullPath;
+		return grid;
 
 	}
 }
