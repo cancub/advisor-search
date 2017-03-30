@@ -17,6 +17,7 @@ public class Character : MonoBehaviour {
 	private int myID;
 	private int lastProfID;			// the id of the last prof that was spoken to
 	private int currentProfID;		// the id of the prof that we actually need to talk to
+	private int randomProfID;		// when we don't know the location of currentProf, pick a random prof and check their plaque
 
 		// flags
 	private bool goToProf;				// flag to show that the character is on its way to a prof
@@ -67,8 +68,6 @@ public class Character : MonoBehaviour {
 //		transform.position = new Vector3(-6.5f,0.5f,0);
 
 		// ensure that each character has a different random number generator
-//		Random.InitState((int)transform.position.x);
-//		Random.InitState((int)(Random.Range (0, 20f)) + (int)transform.position.y);
 
 		lastProfID = int.MaxValue;
 		currentProfID  = lastProfID;
@@ -96,7 +95,7 @@ public class Character : MonoBehaviour {
 		windowDest = unknownDest;
 		currentPosition = unknownDest;
 
-		currentPosition = new Vector3 (0, 0, 0);
+//		currentPosition = new Vector3 (0, 0, 0);
 
 		knownProfessors = new List<professor> ();
 		path = new List<Vector3> ();
@@ -110,7 +109,7 @@ public class Character : MonoBehaviour {
 	// Update is called once per frame and will run the root of the behaviour tree
 	void Update () {
 
-		print (BehaviourTree ());
+		BehaviourTree ();
 
 	}
 
@@ -154,6 +153,7 @@ public class Character : MonoBehaviour {
 					}
 				}
 			}
+			return true;
 		}
 
 		return false;
@@ -195,6 +195,7 @@ public class Character : MonoBehaviour {
 					}
 				}
 			}
+			return true;
 		}
 
 		return false;
@@ -202,7 +203,8 @@ public class Character : MonoBehaviour {
 	}
 
 	public bool talkTimerFinished() {
-		return Time.time > (waitTime + minTalkTime);
+		float currentTime = Time.time;
+		return currentTime > (waitTime + minTalkTime);
 	}
 
 	public bool saveProfID() {
@@ -211,14 +213,14 @@ public class Character : MonoBehaviour {
 	}
 
 	public bool getNextProfID() {
-		Random.InitState((int)transform.position.x);
-		Random.InitState((int)(Random.Range (0, 20f)) + (int)transform.position.y);
 
 		// randomly select another prof to talk to
-		currentProfID = (int)Random.Range (0f, 6f);
+		currentProfID = gc.getRandProfID();
 		while (currentProfID == lastProfID) {
-			currentProfID = (int)Random.Range (0f, 6f);
+			currentProfID = gc.getRandProfID();
 		}
+
+		print ("searching for " + currentProfID.ToString ());
 
 		return true;
 	}
@@ -328,7 +330,8 @@ public class Character : MonoBehaviour {
 				break;
 			}
 		}
-		finalDest = nextProfDest;
+		// can only get so close to prof, don't want any ethics problems
+		finalDest = gc.getClosestSpot((Vector2)transform.position, nextProfDest);
 		// returns true if we already knew about this prof's location
 		return finalDest != unknownDest;
 	}
@@ -343,15 +346,12 @@ public class Character : MonoBehaviour {
 
 	private bool getUnknownPlaque() {
 
-		Random.InitState((int)transform.position.x);
-		Random.InitState((int)(Random.Range (0, 20f)) + (int)transform.position.y);
-
 		// select from the ids of unknown professor locations to get the next plaque to visit
-//		currentProfID = (int)Random.Range(0,6f);
-		currentProfID = 2;
+		currentProfID = gc.getRandProfID();
+//		currentProfID = 2;
 
 		while (profLocationKnown ()) {
-			currentProfID = (int)Random.Range(0,6f);
+			currentProfID = gc.getRandProfID();
 		}
 
 		return true;
@@ -401,16 +401,18 @@ public class Character : MonoBehaviour {
 		if (newPathSize == 0 || newPathSize == 5) {
 			path = gc.obtainCombinedPath ((Vector2)(transform.position), finalDest, 5);
 			pathStep = 0;
+			currentPosition = transform.position;
+			currentPosition.z = 0;
 		} else {
 			List<Vector3> newPath = gc.obtainCombinedPath ((Vector2)(transform.position), finalDest, newPathSize);
 			path.AddRange (newPath);
+			// continue on as if nothing happened
 		}
 //		print ("END -- " + myID.ToString() + ": (" + end.x.ToString()+"," + end.y.ToString()+")");
 
 
 
-		currentPosition = transform.position;
-		currentPosition.z = 0;
+
 
 		windowDest = path [path.Count - 1];
 //		print ("WINDOW -- " + myID.ToString() + ": (" + windowDest.x.ToString()+"," + windowDest.y.ToString()+")");

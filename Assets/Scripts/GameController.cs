@@ -279,12 +279,7 @@ public class GameController : MonoBehaviour {
 	public List<Vector3> obtainCombinedPath (Vector2 start, Vector2 end, int pathSize) {
 		// combined path in the sense that it is in relation to all other paths in 3D space
 		List<Vector2> newPath;
-		// if a location is at a professor, return the nearest adjacent spot
-		if (toProfessor(end)) {
-			newPath = AStar.navigate (start, getClosestSpot(start,end));
-		} else {
-			newPath = AStar.navigate (start, end);
-		}
+		newPath = AStar.navigate (start, end);
 
 		// at this point we have the complete path, but we just want a window of a certain size.
 
@@ -308,8 +303,9 @@ public class GameController : MonoBehaviour {
 				finalPath.Insert(0,tempTile);
 			}
 		} else {
+			int totalSize = (newPath.Count < pathSize) ? newPath.Count : pathSize;
 			// this is the start of a new window, so count upwards
-			for (int i = 0; i < pathSize; i++) {
+			for (int i = 0; i < totalSize; i++) {
 				tempTile = newPath [i];
 				tempTile.z = i + 1;
 				finalPath.Add(tempTile);
@@ -361,5 +357,9 @@ public class GameController : MonoBehaviour {
 		}
 
 		return false;
+	}
+
+	public int getRandProfID(){
+		return (int)Random.Range (0, 6f);
 	}
 }
