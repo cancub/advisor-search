@@ -86,6 +86,12 @@ public class GameController : MonoBehaviour {
 			}
 		}
 
+		foreach (Transform prof in profs.transform) {
+			if ((new Vector2 (x, y) - (Vector2) prof.position).magnitude < 0.001f) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -107,6 +113,12 @@ public class GameController : MonoBehaviour {
 			Vector2 size = new Vector2 (child.localScale.x, child.localScale.y);
 			Rect rect = new Rect(pos,size);
 			if (rect.Contains (new Vector2 (click.x, click.y) - bottomLeft)) {
+				return true;
+			}
+		}
+
+		foreach (Transform prof in profs.transform) {
+			if ((click - (Vector2) prof.position).magnitude < 0.001f) {
 				return true;
 			}
 		}
@@ -297,9 +309,14 @@ public class GameController : MonoBehaviour {
 
 		if (pathSize < pathWindow) {
 			// count backwards from 5 to set the time (3rd dimension)
-			int totalSize = (newPath.Count < pathSize) ? newPath.Count : pathSize;
 
 // TODO: figure out what happens when we request 4, but the total number of spaces available to walk is less than 4
+
+			// duplicate the last entry until we get to the desired number of spaces
+			while (newPath.Count < pathSize) {
+				newPath.Add (newPath [newPath.Count - 1]);
+			}
+
 			for (int i = 0; i < pathSize; i++) {
 				tempTile = newPath [pathSize - 1 - i];
 				tempTile.z = (float)(5 - i);

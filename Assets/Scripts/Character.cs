@@ -86,6 +86,7 @@ public class Character : MonoBehaviour {
 		maxWaitTime = 2.0f;
 		minTalkTime = 0.5f;
 		annoyedTime = 0.1f;
+
 		frustratedTime = 3.0f;
 
 		waitTime = float.MaxValue;
@@ -153,7 +154,7 @@ public class Character : MonoBehaviour {
 						resetPathPrecedence();
 					}
 				}
-				path = new List<Vector3> ();
+//				path = new List<Vector3> ();
 				// let the character immediately move
 				return false;
 			}
@@ -189,16 +190,17 @@ public class Character : MonoBehaviour {
 								// plaque we will pass by on the way out to the new prof
 								if (getNextProfID()) {
 									// selector subbranch
-									if (!processID()) {
+									if (processID()) {
 										// the prof's location was not known
-										resetGoToProfFlag();
+
 									}
+									processRandomWait();
 								}
 							}
 						}
 					}
 				}
-				path = new List<Vector3> ();
+//				path = new List<Vector3> ();
 				// we want to let the character move immediately after we've determined that they have finished talking 
 				return false;
 			}
@@ -238,14 +240,17 @@ public class Character : MonoBehaviour {
 		// subbranch implemented as a sequence
 		if (profLocationKnown (currentProfID)) {
 			// heading directly to a prof
-			if (setGoToProfFlag ()) {
-				//selector subbranch
-				// determine if there will be a random wait somewhere
-				if (!goingToWait ()) {
-					// there won't so reset the flags
-					return resetWaitingFlags ();
-				}
-			}
+			return setGoToProfFlag ();
+		} else {
+			resetGoToProfFlag();
+		}
+
+		return false;
+	}
+
+	private bool processRandomWait() {
+		if (!goingToWait ()) {
+			return resetGoToWaitFlag ();
 		}
 
 		return false;
@@ -301,7 +306,7 @@ public class Character : MonoBehaviour {
 
 	public bool setWaitDestination() {
 		// sequence
-		if (getGoToWaitFlag ()) {
+		if (goToWait) {
 			// supposed to wait so set the next destination
 			// will be true
 			return setRandomDestination();
@@ -311,7 +316,7 @@ public class Character : MonoBehaviour {
 	}
 
 	private bool setRandomDestination() {
-		Vector2 randomDest = gc.emptyPointInGame ();;
+		Vector2 randomDest = gc.emptyPointInGame ();
 		finalDest = randomDest ;
 		return finalDest == randomDest;
 	}
@@ -594,7 +599,7 @@ public class Character : MonoBehaviour {
 		// is needed
 
 		//sequence
-		if (!goToProf) {
+		if (!goToProf && !goToWait) {
 			// must be searching for a plaque (i.e. not going directly to a prof)
 			if (adjacentToNewPlaque()) {
 				if (setDistinationInfo ()) {
@@ -677,7 +682,7 @@ public class Character : MonoBehaviour {
 	}
 
 	private bool foundProf () {
-		if (goToProf) {
+		if (goToProf && !goToWait) {
 			if (atFinalSpot()) {
 				if (setTimer ()) {
 					if (setPathPrecedence ()) {
