@@ -141,7 +141,7 @@ public class Character : MonoBehaviour {
 		// checks if they should be finished and decides what to do next
 
 		// runs as a sequence
-		if (getIsWaitingFlag ()) {
+		if (isWaiting) {
 			// currently waiting
 			if (waitTimerFinished ()) {
 				// should no longer be waiting
@@ -150,9 +150,12 @@ public class Character : MonoBehaviour {
 					if (resetWaitingFlags ()) {
 						// this character will now be moving, and so does not need to be given priority over
 						// their spot
-						return resetPathPrecedence();
+						resetPathPrecedence();
 					}
 				}
+				path = new List<Vector3> ();
+				// let the character immediately move
+				return false;
 			}
 			return true;
 		}
@@ -188,13 +191,16 @@ public class Character : MonoBehaviour {
 									// selector subbranch
 									if (!processID()) {
 										// the prof's location was not known
-										return resetGoToProfFlag();
+										resetGoToProfFlag();
 									}
 								}
 							}
 						}
 					}
 				}
+				path = new List<Vector3> ();
+				// we want to let the character move immediately after we've determined that they have finished talking 
+				return false;
 			}
 			return true;
 		}
@@ -248,6 +254,7 @@ public class Character : MonoBehaviour {
 	public bool goingToWait() {
 		// with 50% likelihood, the character will decide to go wait at a random spot anywhere in the level
 		if (shouldWait()) {
+			print ("will chill out for a bit");
 			return setGoToWaitFlag ();
 		}
 
@@ -354,7 +361,7 @@ public class Character : MonoBehaviour {
 			randomProfID = gc.getRandProfID();
 		}
 
-		print ("will check out " + randomProfID.ToString ());
+		print ("searching for " + currentProfID.ToString() + ", will check out " + randomProfID.ToString ());
 
 		return true;
 	}
@@ -844,7 +851,7 @@ public class Character : MonoBehaviour {
 	}
 
 	private bool getIsWaitingFlag() {
-		return goToWait;
+		return isWaiting;
 	}
 
 	private bool updateMovement() {

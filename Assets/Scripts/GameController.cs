@@ -297,6 +297,9 @@ public class GameController : MonoBehaviour {
 
 		if (pathSize < pathWindow) {
 			// count backwards from 5 to set the time (3rd dimension)
+			int totalSize = (newPath.Count < pathSize) ? newPath.Count : pathSize;
+
+// TODO: figure out what happens when we request 4, but the total number of spaces available to walk is less than 4
 			for (int i = 0; i < pathSize; i++) {
 				tempTile = newPath [pathSize - 1 - i];
 				tempTile.z = (float)(5 - i);
@@ -325,11 +328,13 @@ public class GameController : MonoBehaviour {
 		// scan through the empty tiles one move away from the prof
 		for (float i = -1f; i <= 1f; i += 1f) {
 			for (float j = -1f; j <= 1f; j += 1f) {
-				testTile = loc;
-				testTile.x += i;
-				testTile.y += j;
-				if (!inObstacle (testTile)) {
-					emptyTiles.Add (testTile);
+				if (!(i == 0 && j == 0)){
+					testTile = loc;
+					testTile.x += i;
+					testTile.y += j;
+					if (!inObstacle (testTile)) {
+						emptyTiles.Add (testTile);
+					}
 				}
 			}
 		}
